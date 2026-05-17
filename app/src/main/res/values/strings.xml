@@ -1,0 +1,44 @@
+<resources>
+    <string name="app_name">Ubi Share</string>
+    <string name="descripcion_icono_app">Icono de la aplicación</string>
+    <string name="bienvenido">Bienvenido</string>
+    <string name="crea_cuenta">Crea tu Cuenta</string>
+    <string name="info_personal">Información Personal</string>
+    <string name="completa_datos">Completa los datos.</string>
+    <string name="label_nombre">Nombre</string>
+    <string name="placeholder_nombre">Tu nombre completo</string>
+    <string name="label_email">Correo Electrónico</string>
+    <string name="placeholder_email">correo@ejemplo.com</string>
+    <string name="label_password">Contraseña</string>
+    <string name="placeholder_password">••••••••</string>
+    <string name="label_telefono">Teléfono</string>
+    <string name="placeholder_telefono">+57 300 000 0000</string>
+    <string name="boton_continuar">Guardar y Continuar</string>
+    <string name="menu_opciones">Más opciones</string>
+    <string name="editar_perfil">Editar perfil</string>
+    <string name="cerrar_sesion">Cerrar sesión</string>
+    <string name="compartir_ubicacion">Compartir Ubicación</string>
+    <string name="ubicacion_activa">Tu ubicación se está compartiendo en tiempo real</string>
+    <string name="ubicacion_inactiva">Tu ubicación está oculta para otros usuarios</string>
+
+    <!-- Mapa -->
+    <string name="mapa_placeholder">Mapa no disponible</string>
+
+    <!-- Login Screen -->
+    <string name="login_subtitulo">Inicia sesión para continuar</string>
+    <string name="login_titulo">Iniciar Sesión</string>
+    <string name="login_instrucciones">Ingresa tus credenciales para acceder.</string>
+    <string name="boton_iniciar_sesion">Iniciar Sesión</string>
+    <string name="pregunta_sin_cuenta">¿No tienes cuenta?</string>
+    <string name="boton_registrate">Regístrate</string>
+
+    <!-- Edit Profile Screen -->
+    <string name="descripcion_volver">Volver</string>
+    <string name="mi_perfil">Mi Perfil</string>
+    <string name="actualiza_info">Actualiza tu información</string>
+    <string name="modifica_campos">Modifica los campos que deseas actualizar.</string>
+    <string name="placeholder_nueva_password">Nueva contraseña</string>
+    <string name="perfil_actualizado">¡Perfil actualizado correctamente!</string>
+    <string name="boton_guardar_cambios">Guardar Cambios</string>
+    <string name="boton_cancelar">Cancelar</string>
+</resources>
