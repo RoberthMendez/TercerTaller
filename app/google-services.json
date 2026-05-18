@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "741592484468",
+    "project_id": "tercertaller-c1323",
+    "storage_bucket": "tercertaller-c1323.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:741592484468:android:f7f9375c4e31bfc885df21",
+        "android_client_info": {
+          "package_name": "com.example.tercertaller"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBmf0ZsHy96kLWAj3A7B4GNCm5ioCFwSZk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
