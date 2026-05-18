@@ -12,7 +12,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,28 +25,65 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.tercertaller.R
-import com.example.tercertaller.viewmodels.RegisterViewModel
 import com.example.tercertaller.ui.components.CampoForm
+import com.example.tercertaller.viewmodels.AuthViewModel
+import com.example.tercertaller.viewmodels.RegisterViewModel
+import com.example.tercertaller.viewmodels.UserViewModel
 
 @Composable
 fun RegisterScreen(
-    viewModel: RegisterViewModel = viewModel(),
+    registerViewModel: RegisterViewModel = viewModel(),
+    authViewModel: AuthViewModel = viewModel(),
+    userViewModel: UserViewModel = viewModel(),
     onIniciarSesion: () -> Unit = {}
 ) {
-    val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
+    val registerUiState by registerViewModel.uiState.collectAsState()
+    val userUiState by userViewModel.uiState.collectAsState()
+    val authUiState by authViewModel.uiState.collectAsState()
+
+
     // Mostrar toast cuando hay error
-    LaunchedEffect(uiState.showErrDialog) {
-        if (uiState.showErrDialog) {
+    LaunchedEffect(authUiState.showErrDialog) {
+        if (authUiState.showErrDialog) {
             Toast.makeText(
                 context,
-                uiState.errorMessage ?: "Unknown error",
+                authUiState.errorMessage ?: "Unknown error",
                 Toast.LENGTH_SHORT
             ).show()
-            viewModel.dismissErrorDialog()
+            authViewModel.dismissErrorMessage()
         }
     }
+
+    LaunchedEffect(authUiState.isAuthenticated) {
+        if (authUiState.isAuthenticated) {
+            userViewModel.createUserProfile(registerViewModel.getUsuario()){ error ->
+                if (error == null) onIniciarSesion()
+            }
+        }
+    }
+
+    LaunchedEffect(userUiState.showErrorMessage) {
+        if (userUiState.showErrorMessage) {
+            Toast.makeText(
+                context,
+                userUiState.errorMessage ?: "Unknown error",
+                Toast.LENGTH_SHORT
+            ).show()
+            authViewModel.eliminarCuenta { error ->
+                if (error != null) {
+                    Toast.makeText(
+                        context,
+                        "Error al eliminar cuenta: ${error.localizedMessage}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+            userViewModel.dismissErrorMessage()
+        }
+    }
+
 
     Box(
         modifier = Modifier
@@ -128,9 +164,9 @@ fun RegisterScreen(
 
                 CampoForm(
                     label = stringResource(R.string.label_nombre),
-                    error = if (uiState.isNombreError) stringResource(R.string.error_nombre) else "",
-                    value = uiState.nombre,
-                    onValueChange = viewModel::onNombreChange,
+                    error = if (registerUiState.isNombreError) stringResource(R.string.error_nombre) else "",
+                    value = registerUiState.nombre,
+                    onValueChange = registerViewModel::onNombreChange,
                     placeholder = stringResource(R.string.placeholder_nombre),
                     leadingIcon = {
                         Icon(
@@ -145,9 +181,9 @@ fun RegisterScreen(
 
                 CampoForm(
                     label = stringResource(R.string.label_email),
-                    error = if (uiState.isEmailError) stringResource(R.string.error_email) else "",
-                    value = uiState.email,
-                    onValueChange = viewModel::onEmailChange,
+                    error = if (registerUiState.isEmailError) stringResource(R.string.error_email) else "",
+                    value = registerUiState.email,
+                    onValueChange = registerViewModel::onEmailChange,
                     placeholder = stringResource(R.string.placeholder_email),
                     keyboardType = KeyboardType.Email,
                     leadingIcon = {
@@ -163,9 +199,9 @@ fun RegisterScreen(
 
                 CampoForm(
                     label = stringResource(R.string.label_password),
-                    value = uiState.password,
-                    error = if (uiState.isPassError) stringResource(R.string.error_password) else "",
-                    onValueChange = viewModel::onPasswordChange,
+                    value = registerUiState.password,
+                    error = if (registerUiState.isPassError) stringResource(R.string.error_password) else "",
+                    onValueChange = registerViewModel::onPasswordChange,
                     placeholder = stringResource(R.string.placeholder_password),
                     keyboardType = KeyboardType.Password,
                     isPassword = true,
@@ -182,9 +218,9 @@ fun RegisterScreen(
 
                 CampoForm(
                     label = stringResource(R.string.label_telefono),
-                    error = if (uiState.isTelefonoError) stringResource(R.string.error_telefono) else "",
-                    value = uiState.telefono,
-                    onValueChange = viewModel::onTelefonoChange,
+                    error = if (registerUiState.isTelefonoError) stringResource(R.string.error_telefono) else "",
+                    value = registerUiState.telefono,
+                    onValueChange = registerViewModel::onTelefonoChange,
                     placeholder = stringResource(R.string.placeholder_telefono),
                     keyboardType = KeyboardType.Phone,
                     leadingIcon = {
@@ -199,15 +235,10 @@ fun RegisterScreen(
                 Spacer(modifier = Modifier.height(28.dp))
 
                 Button(
-                    enabled = !uiState.isEmailError && !uiState.isPassError && !uiState.isNombreError && !uiState.isTelefonoError,
+                    enabled = !registerUiState.isEmailError && !registerUiState.isPassError && !registerUiState.isNombreError && !registerUiState.isTelefonoError,
                     onClick = {
-                        if (uiState.email.isNotEmpty() && uiState.password.isNotEmpty() && !uiState.isEmailError && !uiState.isPassError) {
-                            viewModel.registrarUsuario() { error ->
-                                if (error == null) {
-                                    onIniciarSesion()
-                                }
-                            }
-                        }
+                        if (registerUiState.email.isNotEmpty() && registerUiState.password.isNotEmpty() && !registerUiState.isEmailError && !registerUiState.isPassError)
+                            authViewModel.registrarUsuario(registerUiState.email, registerUiState.password)
                     },
                     modifier = Modifier
                         .fillMaxWidth()
