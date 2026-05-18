@@ -1,5 +1,6 @@
 package com.example.tercertaller.ui.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -15,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -25,15 +27,37 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.tercertaller.R
 import com.example.tercertaller.ui.components.CampoForm
+import com.example.tercertaller.viewmodels.AuthViewModel
 import com.example.tercertaller.viewmodels.LoginViewModel
 
 @Composable
 fun LoginScreen(
-    viewModel: LoginViewModel = viewModel(),
+    loginViewModel: LoginViewModel = viewModel(),
+    authViewModel: AuthViewModel = viewModel(),
     onNavigateToRegister: () -> Unit = {},
     onIniciarSesion: () -> Unit = {}
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+
+    val loginUiState by loginViewModel.uiState.collectAsState()
+    val authUiState by authViewModel.uiState.collectAsState()
+
+    LaunchedEffect(authUiState.isAuthenticated) {
+        if (authUiState.isAuthenticated) {
+            onIniciarSesion()
+        }
+    }
+
+    LaunchedEffect(authUiState.showErrDialog) {
+        if (authUiState.showErrDialog) {
+            Toast.makeText(
+                context,
+                authUiState.errorMessage ?: "Unknown error",
+                Toast.LENGTH_SHORT
+            ).show()
+            authViewModel.dismissErrorMessage()
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -118,9 +142,9 @@ fun LoginScreen(
 
                 CampoForm(
                     label = stringResource(id = R.string.label_email),
-                    value = uiState.email,
-                    onValueChange = viewModel::onEmailChange,
-                    error = if (uiState.isEmailError) stringResource(id = R.string.error_email) else "",
+                    value = loginUiState.email,
+                    onValueChange = loginViewModel::onEmailChange,
+                    error = if (loginUiState.isEmailError) stringResource(id = R.string.error_email) else "",
                     placeholder = stringResource(id = R.string.placeholder_email),
                     keyboardType = KeyboardType.Email,
                     leadingIcon = {
@@ -136,8 +160,8 @@ fun LoginScreen(
 
                 CampoForm(
                     label = stringResource(id = R.string.label_password),
-                    value = uiState.password,
-                    onValueChange = viewModel::onPasswordChange,
+                    value = loginUiState.password,
+                    onValueChange = loginViewModel::onPasswordChange,
                     placeholder = stringResource(id = R.string.placeholder_password),
                     keyboardType = KeyboardType.Password,
                     isPassword = true,
@@ -153,7 +177,10 @@ fun LoginScreen(
                 Spacer(modifier = Modifier.height(28.dp))
 
                 Button(
-                    onClick = onIniciarSesion,
+                    enabled = !loginUiState.isLoading && loginViewModel.datosValidos(),
+                    onClick = {
+                        authViewModel.authenticate(loginUiState.email, loginUiState.password)
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp),
@@ -165,7 +192,7 @@ fun LoginScreen(
                         disabledContentColor = MaterialTheme.colorScheme.onPrimary
                     )
                 ) {
-                    if (uiState.isLoading) {
+                    if (loginUiState.isLoading) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(22.dp),
                             color = MaterialTheme.colorScheme.onPrimary,

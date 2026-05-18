@@ -19,6 +19,7 @@ data class AuthUiState(
 interface AccountService {
     fun register(email: String, password: String, onResult: (Throwable?) -> Unit)
     fun eliminarCuenta(onResult: (Throwable?) -> Unit)
+    fun authenticate(email: String, password: String)
     /*fun authenticate(email: String, password: String, onResult: (Throwable?) -> Unit)
     fun register(email: String, password: String, onResult: (Throwable?) -> Unit)
     fun forgotPassword(email: String, onResult: (Throwable?) -> Unit)
@@ -93,6 +94,17 @@ class AuthViewModel: ViewModel(), AccountService {
             }
         } else {
             onResult(Exception("No hay usuario autenticado"))
+        }
+    }
+
+    override fun authenticate(email: String, password: String) {
+        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+
+        auth.signInWithEmailAndPassword(email, password).addOnFailureListener {
+            _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = it.localizedMessage, showErrDialog = true)
+        }.addOnSuccessListener {
+            val user = auth.currentUser
+            _uiState.value = _uiState.value.copy(isLoading = false, isAuthenticated = true, currentUser = user)
         }
     }
 

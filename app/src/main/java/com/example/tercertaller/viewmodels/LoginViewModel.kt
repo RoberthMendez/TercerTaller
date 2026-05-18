@@ -10,8 +10,7 @@ data class LoginUiState(
     val email: String = "",
     val password: String = "",
     val isLoading: Boolean = false,
-    val isEmailError: Boolean = false,
-    val isPassError: Boolean = false
+    val isEmailError: Boolean = false
 )
 
 class LoginViewModel : ViewModel() {
@@ -30,11 +29,13 @@ class LoginViewModel : ViewModel() {
 
     fun onPasswordChange(value: String) {
         _uiState.update { it.copy(password = value) }
-        if (value.isEmpty() || value.length < 6) {
-            _uiState.update { it.copy(isPassError = true) }
-        } else {
-            _uiState.update { it.copy(isPassError = false) }
-        }
+    }
+
+    fun datosValidos(): Boolean {
+        val email = uiState.value.email
+        val password = uiState.value.password
+        return email.isNotBlank() && android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() &&
+                password.isNotEmpty()
     }
 
 }
