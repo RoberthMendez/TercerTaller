@@ -120,6 +120,7 @@ fun LoginScreen(
                     label = stringResource(id = R.string.label_email),
                     value = uiState.email,
                     onValueChange = viewModel::onEmailChange,
+                    error = if (uiState.isEmailError) stringResource(id = R.string.error_email) else "",
                     placeholder = stringResource(id = R.string.placeholder_email),
                     keyboardType = KeyboardType.Email,
                     leadingIcon = {

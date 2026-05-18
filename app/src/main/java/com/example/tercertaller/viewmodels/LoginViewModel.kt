@@ -9,7 +9,9 @@ import kotlinx.coroutines.flow.update
 data class LoginUiState(
     val email: String = "",
     val password: String = "",
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val isEmailError: Boolean = false,
+    val isPassError: Boolean = false
 )
 
 class LoginViewModel : ViewModel() {
@@ -19,10 +21,20 @@ class LoginViewModel : ViewModel() {
 
     fun onEmailChange(value: String) {
         _uiState.update { it.copy(email = value) }
+        if (value.isBlank() || !android.util.Patterns.EMAIL_ADDRESS.matcher(value).matches()) {
+            _uiState.update { it.copy(isEmailError = true) }
+        } else {
+            _uiState.update { it.copy(isEmailError = false) }
+        }
     }
 
     fun onPasswordChange(value: String) {
         _uiState.update { it.copy(password = value) }
+        if (value.isEmpty() || value.length < 6) {
+            _uiState.update { it.copy(isPassError = true) }
+        } else {
+            _uiState.update { it.copy(isPassError = false) }
+        }
     }
 
 }
