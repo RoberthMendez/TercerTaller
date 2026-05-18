@@ -8,24 +8,34 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.tercertaller.ui.components.main.CardUbicacion
 import com.example.tercertaller.ui.components.main.ContenidoMapa
 import com.example.tercertaller.ui.components.main.TopBar
+import com.example.tercertaller.viewmodels.AuthViewModel
 import com.example.tercertaller.viewmodels.MainViewModel
 
 @Composable
 fun MainScreen(
-    viewModel: MainViewModel = viewModel(),
+    mainViewModel: MainViewModel = viewModel(),
+    authViewModel: AuthViewModel = viewModel(),
     onNavigateToEditProfile: () -> Unit = {},
     onNavigateToLogin: () -> Unit = {}
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val mainUiState by mainViewModel.uiState.collectAsState()
+    val authUiState by authViewModel.uiState.collectAsState()
+
+    LaunchedEffect(authUiState.isAuthenticated) {
+        if (!authUiState.isAuthenticated) {
+            onNavigateToLogin()
+        }
+    }
 
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
         TopBar(
-            isMenuExpanded = uiState.isMenuExpanded,
-            onMenuExpandedChanged = viewModel::onMenuExpandedChanged,
+            isMenuExpanded = mainUiState.isMenuExpanded,
+            onMenuExpandedChanged = mainViewModel::onMenuExpandedChanged,
             onEditProfile = onNavigateToEditProfile,
-            onLogout = onNavigateToLogin
+            onGoTologin = onNavigateToLogin,
+            onLogout = {authViewModel.singOut()}
         )
 
         Box(
@@ -34,8 +44,8 @@ fun MainScreen(
             ContenidoMapa()
 
             CardUbicacion(
-                isLocationSharingEnabled = uiState.isLocationSharingEnabled,
-                onLocationSharingChanged = viewModel::onUbicacionCompartidaChanged,
+                isLocationSharingEnabled = mainUiState.isLocationSharingEnabled,
+                onLocationSharingChanged = mainViewModel::onUbicacionCompartidaChanged,
                 modifier = Modifier.align(Alignment.BottomCenter)
             )
         }

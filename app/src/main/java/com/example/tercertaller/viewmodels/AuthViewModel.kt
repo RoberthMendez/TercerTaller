@@ -20,6 +20,8 @@ interface AccountService {
     fun register(email: String, password: String, onResult: (Throwable?) -> Unit)
     fun eliminarCuenta(onResult: (Throwable?) -> Unit)
     fun authenticate(email: String, password: String)
+
+    fun singOut()
     /*fun authenticate(email: String, password: String, onResult: (Throwable?) -> Unit)
     fun register(email: String, password: String, onResult: (Throwable?) -> Unit)
     fun forgotPassword(email: String, onResult: (Throwable?) -> Unit)
@@ -106,6 +108,11 @@ class AuthViewModel: ViewModel(), AccountService {
             val user = auth.currentUser
             _uiState.value = _uiState.value.copy(isLoading = false, isAuthenticated = true, currentUser = user)
         }
+    }
+
+    override fun singOut() {
+        auth.signOut()
+        _uiState.value = _uiState.value.copy(isAuthenticated = false, currentUser = null)
     }
 
 }

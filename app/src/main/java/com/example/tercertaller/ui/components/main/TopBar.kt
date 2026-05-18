@@ -24,7 +24,8 @@ fun TopBar(
     isMenuExpanded: Boolean,
     onMenuExpandedChanged: (Boolean) -> Unit,
     onEditProfile: () -> Unit,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    onGoTologin: () -> Unit = {}
 ) {
     CenterAlignedTopAppBar(
         title = {
@@ -82,6 +83,7 @@ fun TopBar(
                     onClick = {
                         onMenuExpandedChanged(false)
                         onLogout()
+                        onGoTologin()
                     }
                 )
             }

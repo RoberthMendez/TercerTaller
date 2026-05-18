@@ -38,9 +38,13 @@ fun LoginScreen(
     onIniciarSesion: () -> Unit = {}
 ) {
     val context = LocalContext.current
-
     val loginUiState by loginViewModel.uiState.collectAsState()
     val authUiState by authViewModel.uiState.collectAsState()
+
+    // Al iniciar la pantalla, asegurarse de que los campos de correo y contraseña estén vacíos
+    LaunchedEffect(Unit) {
+        loginViewModel.clearCredentials()
+    }
 
     LaunchedEffect(authUiState.isAuthenticated) {
         if (authUiState.isAuthenticated) {
