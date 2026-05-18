@@ -25,7 +25,8 @@ fun CampoForm(
     placeholder: String,
     keyboardType: KeyboardType = KeyboardType.Text,
     isPassword: Boolean = false,
-    leadingIcon: @Composable (() -> Unit)? = null
+    leadingIcon: @Composable (() -> Unit)? = null,
+    error: String = "",
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
@@ -36,6 +37,15 @@ fun CampoForm(
             ),
             modifier = Modifier.padding(bottom = 4.dp)
         )
+        if (error.isNotEmpty()) {
+            Text(
+                text = error,
+                style = MaterialTheme.typography.labelSmall.copy(
+                    color = MaterialTheme.colorScheme.error
+                ),
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
+        }
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,

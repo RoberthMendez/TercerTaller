@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -111,6 +112,7 @@ fun RegisterScreen(
 
                 CampoForm(
                     label = stringResource(R.string.label_nombre),
+                    error = if (uiState.isNombreError) stringResource(R.string.error_nombre) else "",
                     value = uiState.nombre,
                     onValueChange = viewModel::onNombreChange,
                     placeholder = stringResource(R.string.placeholder_nombre),
@@ -127,6 +129,7 @@ fun RegisterScreen(
 
                 CampoForm(
                     label = stringResource(R.string.label_email),
+                    error = if (uiState.isEmailError) stringResource(R.string.error_email) else "",
                     value = uiState.email,
                     onValueChange = viewModel::onEmailChange,
                     placeholder = stringResource(R.string.placeholder_email),
@@ -145,6 +148,7 @@ fun RegisterScreen(
                 CampoForm(
                     label = stringResource(R.string.label_password),
                     value = uiState.password,
+                    error = if (uiState.isPassError) stringResource(R.string.error_password) else "",
                     onValueChange = viewModel::onPasswordChange,
                     placeholder = stringResource(R.string.placeholder_password),
                     keyboardType = KeyboardType.Password,
@@ -162,6 +166,7 @@ fun RegisterScreen(
 
                 CampoForm(
                     label = stringResource(R.string.label_telefono),
+                    error = if (uiState.isTelefonoError) stringResource(R.string.error_telefono) else "",
                     value = uiState.telefono,
                     onValueChange = viewModel::onTelefonoChange,
                     placeholder = stringResource(R.string.placeholder_telefono),
@@ -178,6 +183,8 @@ fun RegisterScreen(
                 Spacer(modifier = Modifier.height(28.dp))
 
                 Button(
+                    enabled = !uiState.isEmailError && !uiState.isPassError && !uiState.isNombreError && !uiState.isTelefonoError
+                            && uiState.nombre.isNotBlank() && uiState.email.isNotBlank() && uiState.password.isNotBlank() && uiState.telefono.isNotBlank(),
                     onClick = { viewModel.registrarUsuario() },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -199,4 +206,5 @@ fun RegisterScreen(
             }
         }
     }
+
 }

@@ -41,4 +41,9 @@
     <string name="perfil_actualizado">¡Perfil actualizado correctamente!</string>
     <string name="boton_guardar_cambios">Guardar Cambios</string>
     <string name="boton_cancelar">Cancelar</string>
+
+    <string name="error_nombre">El nombre no puede estar vacío</string>
+    <string name="error_email">El correo electrónico no es válido</string>
+    <string name="error_password">La contraseña debe tener al menos 6 caracteres</string>
+    <string name="error_telefono">El número de teléfono no es válido</string>
 </resources>
