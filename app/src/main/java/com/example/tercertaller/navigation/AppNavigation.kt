@@ -37,7 +37,9 @@ fun AppNavigation(modifier: Modifier){
         entryProvider = { key ->
             when (key) {
                 is AppRoutes.Register -> NavEntry(key) {
-                    RegisterScreen()
+                    RegisterScreen(
+                        onIniciarSesion = { backStack.add(AppRoutes.Main) }
+                    )
                 }
 
                 is AppRoutes.Login -> NavEntry(key) {

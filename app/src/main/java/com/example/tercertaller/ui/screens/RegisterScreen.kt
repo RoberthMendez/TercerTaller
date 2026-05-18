@@ -1,5 +1,6 @@
 package com.example.tercertaller.ui.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -15,6 +16,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -30,8 +32,22 @@ import com.example.tercertaller.ui.components.CampoForm
 @Composable
 fun RegisterScreen(
     viewModel: RegisterViewModel = viewModel(),
+    onIniciarSesion: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+
+    // Mostrar toast cuando hay error
+    LaunchedEffect(uiState.showErrDialog) {
+        if (uiState.showErrDialog) {
+            Toast.makeText(
+                context,
+                uiState.errorMessage ?: "Unknown error",
+                Toast.LENGTH_SHORT
+            ).show()
+            viewModel.dismissErrorDialog()
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -183,9 +199,16 @@ fun RegisterScreen(
                 Spacer(modifier = Modifier.height(28.dp))
 
                 Button(
-                    enabled = !uiState.isEmailError && !uiState.isPassError && !uiState.isNombreError && !uiState.isTelefonoError
-                            && uiState.nombre.isNotBlank() && uiState.email.isNotBlank() && uiState.password.isNotBlank() && uiState.telefono.isNotBlank(),
-                    onClick = { viewModel.registrarUsuario() },
+                    enabled = !uiState.isEmailError && !uiState.isPassError && !uiState.isNombreError && !uiState.isTelefonoError,
+                    onClick = {
+                        if (uiState.email.isNotEmpty() && uiState.password.isNotEmpty() && !uiState.isEmailError && !uiState.isPassError) {
+                            viewModel.registrarUsuario() { error ->
+                                if (error == null) {
+                                    onIniciarSesion()
+                                }
+                            }
+                        }
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp),
