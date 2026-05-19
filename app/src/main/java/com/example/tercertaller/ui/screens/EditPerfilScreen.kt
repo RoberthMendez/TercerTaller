@@ -41,6 +41,8 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.rememberAsyncImagePainter
+import coil3.request.ImageRequest
+import coil3.request.allowHardware
 import com.example.tercertaller.R
 import com.example.tercertaller.ui.components.CampoForm
 import com.example.tercertaller.viewmodels.AuthViewModel
@@ -60,6 +62,7 @@ fun EditPerfilScreen(
     val userUiState by userViewModel.uiState.collectAsState()
     val authUiState by authViewModel.uiState.collectAsState()
     val editUiState by editViewModel.uiState.collectAsState()
+
     val isLoading = userUiState.isLoading || authUiState.isLoading
     val saveSuccess = userUiState.saveSuccess && (authUiState.saveSuccess && editUiState.isPasswordChangeEnabled || !editUiState.isPasswordChangeEnabled)
 
@@ -80,7 +83,7 @@ fun EditPerfilScreen(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
         if (uri != null) {
-            editViewModel.onPhotoUriChange(uri)
+            userViewModel.onPhotoUriChange(uri)
         }
     }
 
@@ -88,7 +91,7 @@ fun EditPerfilScreen(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
         if (success) {
-            cameraImageUri?.let(editViewModel::onPhotoUriChange)
+            cameraImageUri?.let(userViewModel::onPhotoUriChange)
         }
     }
 
@@ -113,14 +116,11 @@ fun EditPerfilScreen(
 
     var hasInitialized by rememberSaveable { mutableStateOf(false) }
 
-    LaunchedEffect(userUiState.usuario, userUiState.photoUri) {
-        if (userUiState.usuario != null && !hasInitialized && editUiState.photoUri == null) {
+    LaunchedEffect(userUiState.usuario) {
+        if (userUiState.usuario != null && !hasInitialized) {
             userUiState.usuario?.let { user ->
                 editViewModel.onNombreChange(user.nombre)
                 editViewModel.onTelefonoChange(user.telefono)
-            }
-            userUiState.photoUri?.let { uri ->
-                editViewModel.onPhotoUriChange(uri)
             }
             hasInitialized = true
         }
@@ -176,9 +176,14 @@ fun EditPerfilScreen(
                     .background(MaterialTheme.colorScheme.onPrimary),
                 contentAlignment = Alignment.Center
             ) {
-                if (editUiState.photoUri != null) {
+                if (userUiState.photoUri != null) {
                     Image(
-                        painter = rememberAsyncImagePainter(editUiState.photoUri),
+                        painter = rememberAsyncImagePainter(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(userUiState.photoUri)
+                                .allowHardware(false)
+                                .build()
+                        ),
                         contentDescription = stringResource(R.string.foto_perfil),
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
@@ -384,7 +389,7 @@ fun EditPerfilScreen(
                         if (editViewModel.datosValidos()){
                             if(editUiState.isPasswordChangeEnabled)
                                 authViewModel.updatePassword(editUiState.password)
-                            userViewModel.actualizarUsuario(editUiState.nombre, editUiState.telefono, editUiState.photoUri)
+                            userViewModel.actualizarUsuario(editUiState.nombre, editUiState.telefono, userUiState.photoUri)
                         }
 
 

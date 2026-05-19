@@ -66,11 +66,4 @@ class EditProfileViewModel : ViewModel() {
         _uiState.update { it.copy(password = "", isPasswordError = false) }
     }
 
-    fun onPhotoUriChange(uri: Uri?) {
-        _uiState.update { it.copy(photoUri = uri) }
-    }
-
-    fun clearPhotoUri() {
-        _uiState.update { it.copy(photoUri = null) }
-    }
 }

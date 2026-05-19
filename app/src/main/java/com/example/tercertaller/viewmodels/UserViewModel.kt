@@ -18,7 +18,8 @@ data class UserState(
     val photoUri: Uri? = null,
     val errorMessage: String? = null,
     val showErrorMessage: Boolean = false,
-    val saveSuccess: Boolean = false
+    val saveSuccess: Boolean = false,
+    val loadSuccess: Boolean = false
 )
 
 interface UserService {
@@ -26,6 +27,7 @@ interface UserService {
     fun cargarUsuario()
     fun actualizarUsuario(nombre: String, telefono: String, photoUri: Uri?)
     fun cargarFoto()
+    fun clear()
 }
 
 class UserViewModel : ViewModel(), UserService {
@@ -98,48 +100,61 @@ class UserViewModel : ViewModel(), UserService {
             return
         }
 
-        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null, showErrorMessage = false)
+        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null, showErrorMessage = false, saveSuccess = false, loadSuccess = false)
 
         database.reference.child("users").child(uid).get()
             .addOnFailureListener { error ->
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     showErrorMessage = true,
-                    errorMessage = error.localizedMessage
+                    errorMessage = error.localizedMessage,
+                    loadSuccess = false
                 )
             }
             .addOnSuccessListener { snapshot ->
                 val usuarioBD = snapshot.getValue(Usuario::class.java)
                 if (usuarioBD != null) {
                     Log.d("UserViewModel", "Usuario cargado: $usuarioBD")
-                    _uiState.value = _uiState.value.copy(isLoading = false, usuario = usuarioBD)
+                    _uiState.value = _uiState.value.copy(isLoading = false, usuario = usuarioBD, loadSuccess = false)
+                    cargarFoto()
                 } else {
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         showErrorMessage = true,
-                        errorMessage = "No se pudo cargar el perfil del usuario"
+                        errorMessage = "No se pudo cargar el perfil del usuario",
+                        loadSuccess = false
                     )
                 }
+                cargarFoto()
             }
-        cargarFoto()
+
     }
 
     override fun cargarFoto() {
         val uid = auth.currentUser?.uid ?: run {
-            _uiState.value = _uiState.value.copy(errorMessage = "Usuario no autenticado")
+            _uiState.value = _uiState.value.copy(errorMessage = "Usuario no autenticado", loadSuccess = true)
             return
         }
 
+        Log.d("UserViewModel", "cargarFoto() iniciando para uid: $uid")
         storage.reference.child("users/$uid/pf.jpg").downloadUrl
             .addOnFailureListener { error ->
+                Log.d("UserViewModel", "Error al cargar foto: ${error.localizedMessage}")
+                // Si no hay foto, igualmente marca como loadSuccess = true para permitir navegar
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    showErrorMessage = true,
-                    errorMessage = error.localizedMessage
+                    photoUri = null,
+                    loadSuccess = true
                 )
             }
             .addOnSuccessListener { uri ->
+                Log.d("UserViewModel", "Foto cargada exitosamente: $uri")
+                // Establecer la URI primero
                 _uiState.value = _uiState.value.copy(isLoading = false, photoUri = uri)
+
+                // Luego marcar como completado
+                _uiState.value = _uiState.value.copy(loadSuccess = true)
+                Log.d("UserViewModel", "loadSuccess establecido a true con photoUri: $uri")
             }
     }
 
@@ -201,6 +216,14 @@ class UserViewModel : ViewModel(), UserService {
             guardarUsuario()
         }
 
+    }
+
+    override fun clear() {
+        _uiState.value = UserState()
+    }
+
+    fun onPhotoUriChange(uri: Uri?) {
+        _uiState.update { it.copy(photoUri = uri) }
     }
 
 }

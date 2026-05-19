@@ -35,6 +35,8 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.compose.rememberAsyncImagePainter
+import coil3.request.ImageRequest
+import coil3.request.allowHardware
 import com.example.tercertaller.R
 import com.example.tercertaller.ui.components.CampoForm
 import com.example.tercertaller.viewmodels.AuthViewModel
@@ -158,7 +160,12 @@ fun RegisterScreen(
             ) {
                 if (registerUiState.photoUri != null) {
                     Image(
-                        painter = rememberAsyncImagePainter(registerUiState.photoUri),
+                        painter = rememberAsyncImagePainter(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(registerUiState.photoUri)
+                                .allowHardware(false)
+                                .build()
+                        ),
                         contentDescription = stringResource(R.string.foto_perfil),
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
