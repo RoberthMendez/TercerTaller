@@ -1,5 +1,6 @@
 package com.example.tercertaller.viewmodels
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import com.example.tercertaller.data.Ubicacion
 import com.example.tercertaller.data.Usuario
@@ -13,6 +14,7 @@ data class RegisterUiState(
     val email: String = "",
     val password: String = "",
     val telefono: String = "",
+    val photoUri: Uri? = null,
     var isEmailError: Boolean = false,
     var isPassError: Boolean = false,
     var isNombreError: Boolean = false,
@@ -58,6 +60,14 @@ class RegisterViewModel : ViewModel(){
         } else {
             _uiState.update { it.copy(isTelefonoError = false) }
         }
+    }
+
+    fun onPhotoUriChange(uri: Uri?) {
+        _uiState.update { it.copy(photoUri = uri) }
+    }
+
+    fun clearPhotoUri() {
+        _uiState.update { it.copy(photoUri = null) }
     }
 
     fun getUsuario(): Usuario {

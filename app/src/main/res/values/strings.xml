@@ -50,4 +50,5 @@
     <string name="usuario_no_autenticado">Usuario no autenticado</string>
     <string name="cargando">Cargando</string>
     <string name="cambiar_password">Cambiar Contraseña</string>
+    <string name="foto_perfil">Foto de perfil</string>
 </resources>

@@ -1,5 +1,6 @@
 package com.example.tercertaller.viewmodels
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -11,6 +12,7 @@ data class EditProfileUiState(
     val email: String = "",
     val password: String = "",
     val telefono: String = "",
+    val photoUri: Uri? = null,
     val isNombreError: Boolean = false,
     val isPasswordError: Boolean = false,
     val isTelefonoError: Boolean = false,
@@ -62,5 +64,13 @@ class EditProfileViewModel : ViewModel() {
 
     fun cleanPassword(){
         _uiState.update { it.copy(password = "", isPasswordError = false) }
+    }
+
+    fun onPhotoUriChange(uri: Uri?) {
+        _uiState.update { it.copy(photoUri = uri) }
+    }
+
+    fun clearPhotoUri() {
+        _uiState.update { it.copy(photoUri = null) }
     }
 }
