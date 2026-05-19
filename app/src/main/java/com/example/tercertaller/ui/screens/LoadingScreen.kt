@@ -48,6 +48,7 @@ fun LoadingScreen(
     LaunchedEffect(Unit) {
         if (authUiState.isAuthenticated) {
             userViewModel.cargarUsuario()
+            userViewModel.updateEnLinea(true)
             onAuthenticated()
         } else {
             onUnauthenticated()

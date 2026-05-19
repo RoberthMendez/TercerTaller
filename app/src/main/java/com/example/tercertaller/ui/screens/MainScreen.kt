@@ -1,19 +1,10 @@
 package com.example.tercertaller.ui.screens
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil3.compose.rememberAsyncImagePainter
-import coil3.request.ImageRequest
-import coil3.request.allowHardware
-import com.example.tercertaller.R
 import com.example.tercertaller.ui.components.main.CardUbicacion
 import com.example.tercertaller.ui.components.main.ContenidoMapa
 import com.example.tercertaller.ui.components.main.TopBar
@@ -44,6 +35,7 @@ fun MainScreen(
             onNavigateToLogin()
         } else if(userUiState.usuario == null) {
             userViewModel.cargarUsuario()
+            userViewModel.updateEnLinea(true)
         }
     }
 
@@ -56,6 +48,7 @@ fun MainScreen(
             onEditProfile = onNavigateToEditProfile,
             onGoTologin = onNavigateToLogin,
             onLogout = {
+                userViewModel.updateEnLinea(false)
                 authViewModel.singOut()
                 userViewModel.clear()
             }
@@ -70,8 +63,8 @@ fun MainScreen(
             )
 
             CardUbicacion(
-                isLocationSharingEnabled = mainUiState.isLocationSharingEnabled,
-                onLocationSharingChanged = mainViewModel::onUbicacionCompartidaChanged,
+                isLocationSharingEnabled = userUiState.usuario?.enLinea ?: false,
+                onLocationSharingChanged = { isEnabled -> userViewModel.updateEnLinea(isEnabled) },
                 modifier = Modifier.align(Alignment.BottomCenter)
             )
         }

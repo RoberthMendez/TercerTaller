@@ -28,6 +28,7 @@ interface UserService {
     fun actualizarUsuario(nombre: String, telefono: String, photoUri: Uri?)
     fun cargarFoto()
     fun clear()
+    fun updateEnLinea(enLinea: Boolean)
 }
 
 class UserViewModel : ViewModel(), UserService {
@@ -224,6 +225,16 @@ class UserViewModel : ViewModel(), UserService {
 
     fun onPhotoUriChange(uri: Uri?) {
         _uiState.update { it.copy(photoUri = uri) }
+    }
+
+    override fun updateEnLinea(enLinea: Boolean) {
+        val uid = auth.currentUser?.uid ?: return
+        _uiState.update {
+            val usuarioActual = it.usuario
+            val usuarioActualizado = (usuarioActual ?: Usuario()).copy(enLinea = enLinea)
+            it.copy(usuario = usuarioActualizado)
+        }
+        database.reference.child("users").child(uid).child("enLinea").setValue(enLinea)
     }
 
 }
