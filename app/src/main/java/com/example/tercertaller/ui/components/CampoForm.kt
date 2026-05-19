@@ -27,6 +27,7 @@ fun CampoForm(
     isPassword: Boolean = false,
     leadingIcon: @Composable (() -> Unit)? = null,
     error: String = "",
+    isEmailOnEdit: Boolean = false
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
@@ -47,6 +48,7 @@ fun CampoForm(
             )
         }
         OutlinedTextField(
+            enabled = !isEmailOnEdit,
             value = value,
             onValueChange = onValueChange,
             placeholder = {

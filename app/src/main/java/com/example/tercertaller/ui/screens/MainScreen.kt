@@ -10,11 +10,13 @@ import com.example.tercertaller.ui.components.main.ContenidoMapa
 import com.example.tercertaller.ui.components.main.TopBar
 import com.example.tercertaller.viewmodels.AuthViewModel
 import com.example.tercertaller.viewmodels.MainViewModel
+import com.example.tercertaller.viewmodels.UserViewModel
 
 @Composable
 fun MainScreen(
     mainViewModel: MainViewModel = viewModel(),
     authViewModel: AuthViewModel = viewModel(),
+    userViewModel: UserViewModel = viewModel(),
     onNavigateToEditProfile: () -> Unit = {},
     onNavigateToLogin: () -> Unit = {}
 ) {
@@ -24,6 +26,14 @@ fun MainScreen(
     LaunchedEffect(authUiState.isAuthenticated) {
         if (!authUiState.isAuthenticated) {
             onNavigateToLogin()
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        if (!authUiState.isAuthenticated) {
+            onNavigateToLogin()
+        } else {
+            userViewModel.cargarUsuario()
         }
     }
 

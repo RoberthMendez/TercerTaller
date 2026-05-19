@@ -14,7 +14,8 @@ data class AuthUiState(
     val isAuthenticated: Boolean = false,
     val currentUser: FirebaseUser? = null,
     val showErrDialog: Boolean = false,
-    val isRegister: Boolean = false
+    val isRegister: Boolean = false,
+    val saveSuccess: Boolean = false
 )
 interface AccountService {
     fun register(email: String, password: String, onResult: (Throwable?) -> Unit)
@@ -22,6 +23,8 @@ interface AccountService {
     fun authenticate(email: String, password: String)
 
     fun singOut()
+    fun getEmail() : String
+    fun updatePassword(newPassword: String)
     /*fun authenticate(email: String, password: String, onResult: (Throwable?) -> Unit)
     fun register(email: String, password: String, onResult: (Throwable?) -> Unit)
     fun forgotPassword(email: String, onResult: (Throwable?) -> Unit)
@@ -34,13 +37,13 @@ class AuthViewModel: ViewModel(), AccountService {
 
     val auth = Firebase.auth
 
-    /*init {
+    init {
         val currentUser = auth.currentUser
         _uiState.value = _uiState.value.copy(
             isAuthenticated = currentUser != null,
             currentUser = currentUser
         )
-    }*/
+    }
 
     fun registrarUsuario(email: String, password: String) {
         register(email, password) { error ->
@@ -57,6 +60,10 @@ class AuthViewModel: ViewModel(), AccountService {
 
     fun dismissErrorMessage() {
         _uiState.update { it.copy(showErrDialog = false) }
+    }
+
+    fun setSaveSuccess(saveSuccess: Boolean) {
+        _uiState.update { it.copy(saveSuccess = saveSuccess) }
     }
 
     override fun register(
@@ -113,6 +120,24 @@ class AuthViewModel: ViewModel(), AccountService {
     override fun singOut() {
         auth.signOut()
         _uiState.value = _uiState.value.copy(isAuthenticated = false, currentUser = null)
+    }
+
+    override fun getEmail(): String {
+        val user = auth.currentUser
+        return user?.email ?: ""
+    }
+
+    override fun updatePassword(newPassword: String) {
+        val user = auth.currentUser
+        if (user != null) {
+            user.updatePassword(newPassword).addOnFailureListener {
+                _uiState.value = _uiState.value.copy(errorMessage = it.localizedMessage, showErrDialog = true)
+            }.addOnSuccessListener {
+                _uiState.value = _uiState.value.copy(saveSuccess = true)
+            }
+        } else {
+            _uiState.value = _uiState.value.copy(errorMessage = "Usuario no autenticado", showErrDialog = true)
+        }
     }
 
 }

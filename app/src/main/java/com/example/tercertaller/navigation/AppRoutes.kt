@@ -9,4 +9,5 @@ sealed class AppRoutes(): NavKey {
     @Serializable data object Login : AppRoutes()
     @Serializable data object Main : AppRoutes()
     @Serializable data object EditPerfil : AppRoutes()
+    @Serializable data object Loading : AppRoutes()
 }

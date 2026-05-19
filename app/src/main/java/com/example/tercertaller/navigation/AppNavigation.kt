@@ -9,6 +9,7 @@ import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.example.tercertaller.ui.screens.EditPerfilScreen
+import com.example.tercertaller.ui.screens.LoadingScreen
 import com.example.tercertaller.ui.screens.LoginScreen
 import com.example.tercertaller.ui.screens.MainScreen
 import com.example.tercertaller.ui.screens.RegisterScreen
@@ -16,7 +17,7 @@ import com.example.tercertaller.ui.screens.RegisterScreen
 @Composable
 fun AppNavigation(modifier: Modifier){
 
-    val backStack = rememberNavBackStack(AppRoutes.Login)
+    val backStack = rememberNavBackStack(AppRoutes.Loading)
 
     NavDisplay(
         modifier = modifier,
@@ -36,6 +37,12 @@ fun AppNavigation(modifier: Modifier){
         },
         entryProvider = { key ->
             when (key) {
+                is AppRoutes.Loading -> NavEntry(key) {
+                    LoadingScreen(
+                        onAuthenticated = { backStack.add(AppRoutes.Main) },
+                        onUnauthenticated = { backStack.add(AppRoutes.Login) }
+                    )
+                }
                 is AppRoutes.Register -> NavEntry(key) {
                     RegisterScreen(
                         onIniciarSesion = { backStack.add(AppRoutes.Main) }

@@ -1,6 +1,7 @@
 package com.example.tercertaller.viewmodels
 
 import androidx.lifecycle.ViewModel
+import com.example.tercertaller.data.Ubicacion
 import com.example.tercertaller.data.Usuario
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,7 +30,6 @@ class RegisterViewModel : ViewModel(){
             _uiState.update { it.copy(isNombreError = true) }
         } else {
             _uiState.update { it.copy(isNombreError = false) }
-
         }
     }
 
@@ -66,7 +66,7 @@ class RegisterViewModel : ViewModel(){
             nombre = state.nombre,
             telefono = state.telefono,
             enLinea = false,
-            ubicacion = Pair(0.0, 0.0)
+            ubicacion = Ubicacion(0.0, 0.0)
         )
         return nuevoUsuario
     }

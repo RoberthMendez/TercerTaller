@@ -46,4 +46,8 @@
     <string name="error_email">El correo electrónico no es válido</string>
     <string name="error_password">La contraseña debe tener al menos 6 caracteres</string>
     <string name="error_telefono">El número de teléfono no es válido</string>
+
+    <string name="usuario_no_autenticado">Usuario no autenticado</string>
+    <string name="cargando">Cargando</string>
+    <string name="cambiar_password">Cambiar Contraseña</string>
 </resources>

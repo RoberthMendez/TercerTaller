@@ -1,5 +1,6 @@
 package com.example.tercertaller.ui.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -7,17 +8,19 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -28,14 +31,50 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.tercertaller.R
 import com.example.tercertaller.ui.components.CampoForm
+import com.example.tercertaller.viewmodels.AuthViewModel
 import com.example.tercertaller.viewmodels.EditProfileViewModel
+import com.example.tercertaller.viewmodels.UserViewModel
 
 @Composable
 fun EditPerfilScreen(
-    viewModel: EditProfileViewModel = viewModel(),
+    editViewModel: EditProfileViewModel = viewModel(),
+    authViewModel: AuthViewModel = viewModel(),
+    userViewModel: UserViewModel = viewModel(),
     onNavigateBack: () -> Unit = {}
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val current = LocalContext.current
+    val userUiState by userViewModel.uiState.collectAsState()
+    val authUiState by authViewModel.uiState.collectAsState()
+    val editUiState by editViewModel.uiState.collectAsState()
+    val isLoading = userUiState.isLoading || authUiState.isLoading
+    val saveSuccess = userUiState.saveSuccess && (authUiState.saveSuccess && editUiState.isPasswordChangeEnabled || !editUiState.isPasswordChangeEnabled)
+
+    LaunchedEffect(Unit) {
+        editViewModel.setIsPasswordChangeEnabled(false)
+        editViewModel.cleanPassword()
+    }
+
+    var hasInitialized by rememberSaveable { mutableStateOf(false) }
+
+    LaunchedEffect(userUiState.usuario) {
+        if (userUiState.usuario != null && !hasInitialized) {
+            userUiState.usuario?.let { user ->
+                editViewModel.onNombreChange(user.nombre)
+                editViewModel.onTelefonoChange(user.telefono)
+                hasInitialized = true
+            }
+        }
+    }
+
+    LaunchedEffect(authUiState.showErrDialog){
+        if (authUiState.showErrDialog){
+            Toast.makeText(
+                current,
+                authUiState.errorMessage ?: "Error desconocido",
+                Toast.LENGTH_SHORT).show()
+            authViewModel.dismissErrorMessage()
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -56,7 +95,7 @@ fun EditPerfilScreen(
                     modifier = Modifier.padding(start = 8.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.ArrowBack,
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = stringResource(id = R.string.descripcion_volver),
                         tint = MaterialTheme.colorScheme.onPrimary
                     )
@@ -135,8 +174,13 @@ fun EditPerfilScreen(
 
                 CampoForm(
                     label = stringResource(id = R.string.label_nombre),
-                    value = uiState.nombre,
-                    onValueChange = viewModel::onNombreChange,
+                    error = if (editUiState.isNombreError) stringResource(id = R.string.error_nombre) else "",
+                    value = editUiState.nombre,
+                    onValueChange = { newValue ->
+                        editViewModel.onNombreChange(newValue)
+                        userViewModel.setSaveSuccess(false)
+                        authViewModel.setSaveSuccess(false)
+                    },
                     placeholder = stringResource(id = R.string.placeholder_nombre),
                     leadingIcon = {
                         Icon(
@@ -151,8 +195,9 @@ fun EditPerfilScreen(
 
                 CampoForm(
                     label = stringResource(id = R.string.label_email),
-                    value = uiState.email,
-                    onValueChange = viewModel::onEmailChange,
+                    isEmailOnEdit = true,
+                    value = editUiState.email,
+                    onValueChange = { },
                     placeholder = stringResource(id = R.string.placeholder_email),
                     keyboardType = KeyboardType.Email,
                     leadingIcon = {
@@ -167,27 +212,14 @@ fun EditPerfilScreen(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 CampoForm(
-                    label = stringResource(id = R.string.label_password),
-                    value = uiState.password,
-                    onValueChange = viewModel::onPasswordChange,
-                    placeholder = stringResource(id = R.string.placeholder_nueva_password),
-                    keyboardType = KeyboardType.Password,
-                    isPassword = true,
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Lock,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                CampoForm(
                     label = stringResource(id = R.string.label_telefono),
-                    value = uiState.telefono,
-                    onValueChange = viewModel::onTelefonoChange,
+                    error = if (editUiState.isTelefonoError) stringResource(id = R.string.error_telefono) else "",
+                    value = editUiState.telefono,
+                    onValueChange = { newValue ->
+                        editViewModel.onTelefonoChange(newValue)
+                        userViewModel.setSaveSuccess(false)
+                        authViewModel.setSaveSuccess(false)
+                    },
                     placeholder = stringResource(id = R.string.placeholder_telefono),
                     keyboardType = KeyboardType.Phone,
                     leadingIcon = {
@@ -199,21 +231,49 @@ fun EditPerfilScreen(
                     }
                 )
 
-                // ── Mensaje de error ───────────────────────────────────────
-                if (uiState.errorMessage != null) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = uiState.errorMessage!!,
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            color = MaterialTheme.colorScheme.error,
-                            textAlign = TextAlign.Center
-                        ),
-                        modifier = Modifier.fillMaxWidth()
+                Spacer(modifier = Modifier.height(12.dp))
+
+                if(editUiState.isPasswordChangeEnabled) {
+                    CampoForm(
+                        label = stringResource(id = R.string.label_password),
+                        error = if (editUiState.isPasswordError) stringResource(id = R.string.error_password) else "",
+                        value = editUiState.password,
+                        onValueChange = { newValue ->
+                            editViewModel.onPasswordChange(newValue)
+                            userViewModel.setSaveSuccess(false)
+                            authViewModel.setSaveSuccess(false)
+                        },
+                        placeholder = stringResource(id = R.string.placeholder_nueva_password),
+                        keyboardType = KeyboardType.Password,
+                        isPassword = true,
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Lock,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     )
+                } else {
+                    // Botón para habilitar cambio de contraseña
+                    OutlinedButton(
+                        onClick = { editViewModel.setIsPasswordChangeEnabled(true) },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.primary
+                        ),
+                    ) {
+                        Text(
+                            text = stringResource(id = R.string.cambiar_password),
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontWeight = FontWeight.Medium
+                            )
+                        )
+                    }
                 }
 
                 // ── Mensaje de éxito ───────────────────────────────────────
-                if (uiState.saveSuccess) {
+                if (saveSuccess) {
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = stringResource(id = R.string.perfil_actualizado),
@@ -230,8 +290,16 @@ fun EditPerfilScreen(
 
                 // ── Botón guardar ──────────────────────────────────────────
                 Button(
-                    onClick = { viewModel.guardarCambios() },
-                    enabled = !uiState.isSaving,
+                    onClick = {
+                        if (editViewModel.datosValidos()){
+                            if(editUiState.isPasswordChangeEnabled)
+                                authViewModel.updatePassword(editUiState.password)
+                            userViewModel.actualizarUsuario(editUiState.nombre, editUiState.telefono)
+                        }
+
+
+                    },
+                    enabled = !isLoading,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp),
@@ -243,7 +311,7 @@ fun EditPerfilScreen(
                         disabledContentColor = MaterialTheme.colorScheme.onPrimary
                     )
                 ) {
-                    if (uiState.isSaving) {
+                    if (isLoading) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(22.dp),
                             color = MaterialTheme.colorScheme.onPrimary,
@@ -275,3 +343,6 @@ fun EditPerfilScreen(
         }
     }
 }
+
+
+

@@ -11,9 +11,10 @@ data class EditProfileUiState(
     val email: String = "",
     val password: String = "",
     val telefono: String = "",
-    val isSaving: Boolean = false,
-    val errorMessage: String? = null,
-    val saveSuccess: Boolean = false
+    val isNombreError: Boolean = false,
+    val isPasswordError: Boolean = false,
+    val isTelefonoError: Boolean = false,
+    val isPasswordChangeEnabled: Boolean = false
 )
 
 class EditProfileViewModel : ViewModel() {
@@ -21,37 +22,45 @@ class EditProfileViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(EditProfileUiState())
     val uiState: StateFlow<EditProfileUiState> = _uiState.asStateFlow()
 
-    fun cargarPerfil(nombre: String, email: String, telefono: String) {
-        _uiState.update {
-            it.copy(nombre = nombre, email = email, telefono = telefono)
-        }
-    }
-
     fun onNombreChange(value: String) {
-        _uiState.update { it.copy(nombre = value, errorMessage = null, saveSuccess = false) }
-    }
-
-    fun onEmailChange(value: String) {
-        _uiState.update { it.copy(email = value, errorMessage = null, saveSuccess = false) }
+        _uiState.update { it.copy(nombre = value) }
+        if (value.isBlank()) {
+            _uiState.update { it.copy(isNombreError = true) }
+        } else {
+            _uiState.update { it.copy(isNombreError = false) }
+        }
     }
 
     fun onPasswordChange(value: String) {
-        _uiState.update { it.copy(password = value, errorMessage = null, saveSuccess = false) }
+        _uiState.update { it.copy(password = value) }
+        if (value.isEmpty() || value.length < 6) {
+            _uiState.update { it.copy(isPasswordError = true) }
+        } else {
+            _uiState.update { it.copy(isPasswordError = false) }
+        }
     }
 
     fun onTelefonoChange(value: String) {
-        _uiState.update { it.copy(telefono = value, errorMessage = null, saveSuccess = false) }
+        _uiState.update { it.copy(telefono = value) }
+        if (value.isEmpty() || value.length < 6) {
+            _uiState.update { it.copy(isPasswordError = true) }
+        } else {
+            _uiState.update { it.copy(isPasswordError = false) }
+        }
     }
 
-    fun guardarCambios() {
+    fun setIsPasswordChangeEnabled(enabled: Boolean) {
+        _uiState.update { it.copy(isPasswordChangeEnabled = enabled) }
+    }
+
+    fun datosValidos(): Boolean {
         val state = uiState.value
+        return state.nombre.isNotBlank() && !state.isNombreError &&
+                (!state.isPasswordChangeEnabled || (state.password.isNotEmpty() && !state.isPasswordError)) &&
+                (!state.isTelefonoError)
+    }
 
-        if (state.nombre.isBlank() || state.email.isBlank() || state.telefono.isBlank()) {
-            _uiState.update { it.copy(errorMessage = "Por favor completa todos los campos.") }
-            return
-        }
-
-        _uiState.update { it.copy(isSaving = true, errorMessage = null) }
-        _uiState.update { it.copy(isSaving = false, saveSuccess = true) }
+    fun cleanPassword(){
+        _uiState.update { it.copy(password = "", isPasswordError = false) }
     }
 }

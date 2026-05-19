@@ -1,8 +1,13 @@
 package com.example.tercertaller.data
 
 data class Usuario(
-    val nombre: String,
-    val telefono: String,
-    val enLinea: Boolean,
-    val ubicacion: Pair<Double, Double>
+    val nombre: String = "",
+    val telefono: String = "",
+    val enLinea: Boolean = false,
+    val ubicacion: Ubicacion = Ubicacion()
+)
+
+data class Ubicacion(
+    val latitud: Double = 0.0,
+    val longitud: Double = 0.0
 )

@@ -58,7 +58,7 @@ fun RegisterScreen(
 
     LaunchedEffect(authUiState.isAuthenticated) {
         if (authUiState.isAuthenticated) {
-            userViewModel.createUserProfile(registerViewModel.getUsuario()){ error ->
+            userViewModel.crearUsuario(registerViewModel.getUsuario()){ error ->
                 if (error == null) onIniciarSesion()
             }
         }
