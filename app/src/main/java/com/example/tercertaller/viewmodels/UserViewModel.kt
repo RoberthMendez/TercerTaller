@@ -3,6 +3,7 @@ package com.example.tercertaller.viewmodels
 import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import com.example.tercertaller.data.Ubicacion
 import com.example.tercertaller.data.Usuario
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
@@ -29,6 +30,7 @@ interface UserService {
     fun cargarFoto()
     fun clear()
     fun updateEnLinea(enLinea: Boolean)
+    fun updatePosicion(latitud: Double, longitud: Double)
 }
 
 class UserViewModel : ViewModel(), UserService {
@@ -237,4 +239,18 @@ class UserViewModel : ViewModel(), UserService {
         database.reference.child("users").child(uid).child("enLinea").setValue(enLinea)
     }
 
+    override fun updatePosicion(latitud: Double, longitud: Double) {
+        val uid = auth.currentUser?.uid ?: return
+        _uiState.update {
+            val usuarioActual = it.usuario
+            val ubicacion = Ubicacion(latitud, longitud)
+            val usuarioActualizado = (usuarioActual ?: Usuario()).copy(ubicacion = ubicacion)
+            it.copy(usuario = usuarioActualizado)
+        }
+        val posicion = mapOf(
+            "latitud" to latitud,
+            "longitud" to longitud
+        )
+        database.reference.child("users").child(uid).child("posicion").setValue(posicion)
+    }
 }

@@ -12,7 +12,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.MyLocation
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -30,7 +29,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil3.compose.AsyncImage
 import coil3.compose.AsyncImagePainter
 import coil3.compose.rememberAsyncImagePainter
 import coil3.request.ImageRequest
@@ -103,6 +101,15 @@ fun ContenidoMapa(
             locationUiState.route.lastOrNull()?.let {
                 mapaViewModel.setCameraPosition(it)
             }
+        }
+    }
+
+    LaunchedEffect(locationUiState.route){
+        if(userUiState.usuario?.enLinea ?: false) {
+            locationUiState.route.lastOrNull()?.let { pos ->
+                userViewModel.updatePosicion(pos.latitude, pos.longitude)
+            }
+
         }
     }
 
