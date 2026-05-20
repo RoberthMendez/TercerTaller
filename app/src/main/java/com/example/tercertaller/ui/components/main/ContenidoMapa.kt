@@ -3,7 +3,6 @@ package com.example.tercertaller.ui.components.main
 import android.Manifest
 import android.annotation.SuppressLint
 import android.net.Uri
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -138,11 +137,6 @@ fun ContenidoMapa(
 
 
     LaunchedEffect(usersUiState.usuarios){
-        Log.d("ContenidoMapa", "Usuarios actualizados: ${usersUiState.usuarios.size}")
-        Log.d(
-            "ContenidoMapa",
-            "Usuarios en línea: ${usersUiState.usuarios.entries.map { (key, usuarioMapa) -> "$key -> ${usuarioMapa.usuario.nombre} (foto: ${usuarioMapa.photoUri != null})" }}"
-        )
         val lastPhotoUri = usersUiState.usuarios.values.lastOrNull()?.photoUri
 
         // Si la Uri del último usuario no está cargada aún, reiniciar la lógica de carga
@@ -222,6 +216,17 @@ fun ContenidoMapa(
                     width = 6f,
                     zIndex = 0f
                 )
+
+                usersUiState.usuarios.forEach { (_, usuarioMapa) ->
+                    val recorridoP = usuarioMapa.usuario.recorrido
+                    val listaLatLng = recorridoP.values.map { LatLng(it.latitud, it.longitud) }
+                    Polyline(
+                        points = listaLatLng,
+                        color = MaterialTheme.colorScheme.primary,
+                        width = 6f,
+                        zIndex = 0f
+                    )
+                }
             }
 
 
