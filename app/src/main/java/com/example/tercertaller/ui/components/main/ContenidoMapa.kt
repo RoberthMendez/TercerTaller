@@ -2,6 +2,7 @@ package com.example.tercertaller.ui.components.main
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -22,6 +23,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -65,16 +69,7 @@ fun ContenidoMapa(
     val userUiState by userViewModel.uiState.collectAsState()
     val usersUiState by usersViewModel.uiState.collectAsState()
 
-    val painter = rememberAsyncImagePainter(
-        model = ImageRequest.Builder(LocalContext.current)
-            .data(userUiState.photoUri)
-            .allowHardware(false)
-            .build()
-    )
-
-    val state by painter.state.collectAsState()
-
-    val imageLoaded = state is AsyncImagePainter.State.Success
+    var lastUserPhotoUri by remember { mutableStateOf<Uri?>(null) }
 
     val multiplePermission = rememberMultiplePermissionsState(listOf(
         Manifest.permission.ACCESS_FINE_LOCATION,
@@ -82,7 +77,27 @@ fun ContenidoMapa(
     ))
 
     LaunchedEffect(Unit) {
+        usersViewModel.fetchUsuarios()
         multiplePermission.launchMultiplePermissionRequest()
+    }
+
+    /*LaunchedEffect(userUiState.photoUri) {
+        userUiState.photoUri?.let { /* lógica previa de almacenamiento */ }
+    }*/
+
+    val userpainter = rememberAsyncImagePainter(
+        model = ImageRequest.Builder(LocalContext.current)
+            .data(userUiState.photoUri)
+            .allowHardware(false)
+            .build()
+    )
+
+    val userstate by userpainter.state.collectAsState()
+
+    LaunchedEffect(userstate){
+        if (userstate is AsyncImagePainter.State.Success) {
+            mapaViewModel.setImagesLoaded(true)
+        }
     }
 
     LaunchedEffect(multiplePermission.allPermissionsGranted) {
@@ -120,13 +135,40 @@ fun ContenidoMapa(
         }
     }
 
-    LaunchedEffect(Unit) {
-        usersViewModel.fetchUsuarios()
-    }
+
 
     LaunchedEffect(usersUiState.usuarios){
         Log.d("ContenidoMapa", "Usuarios actualizados: ${usersUiState.usuarios.size}")
-        Log.d("ContenidoMapa", "Usuarios en línea: ${usersUiState.usuarios.values.map { it.nombre }}")
+        Log.d(
+            "ContenidoMapa",
+            "Usuarios en línea: ${usersUiState.usuarios.entries.map { (key, usuarioMapa) -> "$key -> ${usuarioMapa.usuario.nombre} (foto: ${usuarioMapa.photoUri != null})" }}"
+        )
+        val lastPhotoUri = usersUiState.usuarios.values.lastOrNull()?.photoUri
+
+        // Si la Uri del último usuario no está cargada aún, reiniciar la lógica de carga
+        if (lastPhotoUri != null && lastPhotoUri !in mapUiState.loadedUris) {
+            mapaViewModel.setImagesLoaded(false)
+            lastUserPhotoUri = lastPhotoUri
+        }
+
+        // Actualizar lastUserPhotoUri con la Uri del último usuario en línea
+
+    }
+
+    val mainpainter = rememberAsyncImagePainter(
+        model = ImageRequest.Builder(LocalContext.current)
+            .data(lastUserPhotoUri)
+            .allowHardware(false)
+            .build()
+    )
+
+    val state by mainpainter.state.collectAsState()
+
+    LaunchedEffect(state){
+        if (state is AsyncImagePainter.State.Success) {
+            lastUserPhotoUri?.let { mapaViewModel.addLoadedUri(it) }
+            mapaViewModel.setImagesLoaded(true)
+        }
     }
 
     Box(
@@ -144,7 +186,7 @@ fun ContenidoMapa(
                 )
             )
         } else {
-            if (imageLoaded)
+            if (mapUiState.isImagesLoaded)
             GoogleMap(
                 modifier = Modifier.fillMaxSize(),
                 cameraPositionState = mapUiState.cameraPositionState,
@@ -156,43 +198,20 @@ fun ContenidoMapa(
             ){
                 locationUiState.route.lastOrNull()?.let { last ->
                     if (userUiState.loadSuccess) {
-                        MarkerComposable(
-                            state = rememberUpdatedMarkerState(last),
-                            anchor = Offset(0.5f, 0.5f),
-                            zIndex = 1f
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(48.dp)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.surface)
-                                    .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                if (userUiState.photoUri != null) {
-                                    Image(
-                                        painter = rememberAsyncImagePainter(
-                                            model = ImageRequest.Builder(LocalContext.current)
-                                                .data(userUiState.photoUri)
-                                                .allowHardware(false)
-                                                .build()
-                                        ),
-                                        contentDescription = stringResource(R.string.foto_perfil),
-                                        modifier = Modifier.fillMaxSize(),
-                                        contentScale = ContentScale.Crop
-                                    )
-                                } else {
-                                    Icon(
-                                        imageVector = Icons.Rounded.AccountCircle,
-                                        contentDescription = null,
-                                        modifier = Modifier.fillMaxSize(),
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
-                                }
-                            }
-                        }
-
+                        MarcadorReutilizable(
+                            coordenadas = LatLng(last.latitude, last.longitude),
+                            userUiState.photoUri
+                        )
                     }
+                }
+
+                // Crear marcadores para cada usuario en línea
+                usersUiState.usuarios.forEach { (_, usuarioMapa) ->
+                    val ubicacion = usuarioMapa.usuario.ubicacion
+                    MarcadorReutilizable(
+                        coordenadas = LatLng(ubicacion.latitud, ubicacion.longitud),
+                        usuarioMapa.photoUri
+                    )
                 }
 
                 val recorrido = userUiState.usuario?.recorrido
@@ -230,5 +249,47 @@ fun ContenidoMapa(
             }
         }
 
+    }
+}
+
+@Composable
+fun MarcadorReutilizable(
+    coordenadas: LatLng,
+    photoUri: Uri? = null
+){
+    MarkerComposable(
+        state = rememberUpdatedMarkerState(coordenadas),
+        anchor = Offset(0.5f, 0.5f),
+        zIndex = 1f
+    ) {
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surface)
+                .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            if (photoUri != null) {
+                Image(
+                    painter = rememberAsyncImagePainter(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(photoUri)
+                            .allowHardware(false)
+                            .build()
+                    ),
+                    contentDescription = stringResource(R.string.foto_perfil),
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Rounded.AccountCircle,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
     }
 }

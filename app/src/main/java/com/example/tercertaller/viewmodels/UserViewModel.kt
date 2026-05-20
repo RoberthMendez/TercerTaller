@@ -266,6 +266,7 @@ class UserViewModel : ViewModel(), UserService {
             it.copy(usuario = usuarioActualizado)
         }
         database.reference.child("users").child(uid).child("enLinea").setValue(enLinea)
+        clearRecorrido()
     }
 
     override fun updatePosicion(latitud: Double, longitud: Double) {

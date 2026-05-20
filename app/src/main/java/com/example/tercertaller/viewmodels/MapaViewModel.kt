@@ -1,14 +1,10 @@
 package com.example.tercertaller.viewmodels
 
-import android.annotation.SuppressLint
 import android.net.Uri
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
-import com.example.tercertaller.R
 import com.example.tercertaller.data.Usuario
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapType
@@ -26,7 +22,10 @@ data class MapState(
     val mapUiSettings: MapUiSettings = MapUiSettings(),
     val isCentered: Boolean = true,
     val mapLoaded: Boolean = false,
-    val showMarker: Boolean = false
+    val showMarker: Boolean = false,
+    val photoUris: Map<String, Uri> = emptyMap(),
+    val isImagesLoaded: Boolean = false,
+    val loadedUris: List<Uri> = emptyList()
 )
 class MapaViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(MapState())
@@ -74,9 +73,34 @@ class MapaViewModel : ViewModel() {
         setCentered(true)
     }
 
+    @Suppress("unused")
     fun setShowMarker(show: Boolean) {
         val state = _uiState.value
         _uiState.value = state.copy(showMarker = show)
+    }
+
+    @Suppress("unused")
+    fun addPhotoUriForUser(uid: String, uri: Uri) {
+        val state = _uiState.value
+        _uiState.value = state.copy(photoUris = state.photoUris + (uid to uri))
+    }
+
+    fun setImagesLoaded(loaded: Boolean) {
+        val state = _uiState.value
+        _uiState.value = state.copy(isImagesLoaded = loaded)
+    }
+
+    fun addLoadedUri(uri: Uri) {
+        val state = _uiState.value
+        if (uri !in state.loadedUris) {
+            _uiState.value = state.copy(loadedUris = state.loadedUris + uri)
+        }
+    }
+
+    @Suppress("unused")
+    fun clearLoadedUris() {
+        val state = _uiState.value
+        _uiState.value = state.copy(loadedUris = emptyList())
     }
 
 }

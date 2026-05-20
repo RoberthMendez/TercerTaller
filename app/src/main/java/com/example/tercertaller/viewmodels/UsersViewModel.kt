@@ -1,6 +1,9 @@
 package com.example.tercertaller.viewmodels
 
+import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.tercertaller.data.Usuario
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
@@ -8,11 +11,19 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.database
+import com.google.firebase.storage.storage
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
+data class UsuarioMapa(
+    val usuario: Usuario,
+    val photoUri: Uri?
+)
 data class UsersUiState(
-    val usuarios: Map<String, Usuario> = emptyMap(),
+    val usuarios: Map<String, UsuarioMapa> = emptyMap(),
     val isLoading: Boolean = false,
     val errorMessage: String? = null
 )
@@ -25,6 +36,7 @@ class UsersViewModel: ViewModel(), UsersService {
 
     private val auth = Firebase.auth
     private val database = Firebase.database
+    private val storage = Firebase.storage
     private var usersListener: ValueEventListener? = null
 
     override fun fetchUsuarios() {
@@ -47,7 +59,39 @@ class UsersViewModel: ViewModel(), UsersService {
                 // Filtrar solo usuarios en línea
                 val usuariosEnLineaMap = usuariosMap.filterValues { it.enLinea }
 
-                _uiState.value = _uiState.value.copy(usuarios = usuariosEnLineaMap, isLoading = false, errorMessage = null)
+                // Cargar las fotos desde Storage de forma asincrónica
+                viewModelScope.launch(Dispatchers.Default) {
+                    val usuariosMapaConFotos = mutableMapOf<String, UsuarioMapa>()
+
+                    for ((usuarioUid, usuario) in usuariosEnLineaMap) {
+                        try {
+                            // Obtener la URL de descarga de la foto desde Storage
+                            val photoUri = storage.reference.child("users/$usuarioUid/pf.jpg")
+                                .downloadUrl
+                                .await()
+
+                            usuariosMapaConFotos[usuarioUid] = UsuarioMapa(
+                                usuario = usuario,
+                                photoUri = photoUri
+                            )
+                            Log.d("UsersViewModel", "Foto cargada para $usuarioUid: $photoUri")
+                        } catch (e: Exception) {
+                            // Si no hay foto, guardar sin photoUri
+                            Log.d("UsersViewModel", "No se pudo cargar foto para $usuarioUid: ${e.localizedMessage}")
+                            usuariosMapaConFotos[usuarioUid] = UsuarioMapa(
+                                usuario = usuario,
+                                photoUri = null
+                            )
+                        }
+                    }
+
+                    // Actualizar el estado con los usuarios y sus fotos
+                    _uiState.value = _uiState.value.copy(
+                        usuarios = usuariosMapaConFotos,
+                        isLoading = false,
+                        errorMessage = null
+                    )
+                }
             }
 
             override fun onCancelled(error: DatabaseError) {

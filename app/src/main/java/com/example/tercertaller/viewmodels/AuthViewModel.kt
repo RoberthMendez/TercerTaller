@@ -25,6 +25,8 @@ interface AccountService {
     fun singOut()
     fun getEmail() : String
     fun updatePassword(newPassword: String)
+
+    fun getUid(): String
     /*fun authenticate(email: String, password: String, onResult: (Throwable?) -> Unit)
     fun register(email: String, password: String, onResult: (Throwable?) -> Unit)
     fun forgotPassword(email: String, onResult: (Throwable?) -> Unit)
@@ -152,6 +154,9 @@ class AuthViewModel: ViewModel(), AccountService {
         }
     }
 
-
+    override fun getUid(): String {
+        val user = auth.currentUser
+        return user?.uid ?: ""
+    }
 
 }
