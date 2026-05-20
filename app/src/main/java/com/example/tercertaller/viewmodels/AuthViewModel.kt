@@ -71,6 +71,13 @@ class AuthViewModel: ViewModel(), AccountService {
         password: String,
         onResult: (Throwable?) -> Unit
     ) {
+        if (email.isBlank() || password.isBlank()) {
+            val error = IllegalArgumentException("Email and password cannot be empty")
+            _uiState.update { it.copy(errorMessage = error.localizedMessage, showErrDialog = true) }
+            onResult(error)
+            return
+        }
+
         // Modo cargando + mensaje de error null
         _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
 
@@ -107,6 +114,11 @@ class AuthViewModel: ViewModel(), AccountService {
     }
 
     override fun authenticate(email: String, password: String) {
+        if (email.isBlank() || password.isBlank()) {
+            _uiState.update { it.copy(errorMessage = "Email and password cannot be empty", showErrDialog = true) }
+            return
+        }
+
         _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
 
         auth.signInWithEmailAndPassword(email, password).addOnFailureListener {

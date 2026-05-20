@@ -4,7 +4,8 @@ data class Usuario(
     val nombre: String = "",
     val telefono: String = "",
     val enLinea: Boolean = false,
-    val ubicacion: Ubicacion = Ubicacion()
+    val ubicacion: Ubicacion = Ubicacion(),
+    val recorrido: Map<String, Ubicacion> = emptyMap()
 )
 
 data class Ubicacion(

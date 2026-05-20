@@ -31,6 +31,8 @@ interface UserService {
     fun clear()
     fun updateEnLinea(enLinea: Boolean)
     fun updatePosicion(latitud: Double, longitud: Double)
+    fun updateRecorrido(latitud: Double, longitud: Double)
+    fun clearRecorrido()
 }
 
 class UserViewModel : ViewModel(), UserService {
@@ -70,9 +72,9 @@ class UserViewModel : ViewModel(), UserService {
                 }
         }
 
-        if (photoUri != null) {
+        fun uploadAndSave(uriToUpload: Uri) {
             storage.reference.child("users/$uid/pf.jpg")
-                .putFile(photoUri)
+                .putFile(uriToUpload)
                 .addOnFailureListener { error ->
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
@@ -84,8 +86,35 @@ class UserViewModel : ViewModel(), UserService {
                 .addOnSuccessListener {
                     guardarUsuario()
                 }
+        }
+
+        // Si el usuario proporcionó una foto, usarla
+        if (photoUri != null) {
+            uploadAndSave(photoUri)
         } else {
-            guardarUsuario()
+            // Si no hay foto, intentar obtener la foto por defecto del Storage
+            storage.reference.child("defaultPhoto/DefaultPf.jpeg").getBytes(Long.MAX_VALUE)
+                .addOnSuccessListener { bytes ->
+                    // Subir los bytes de la foto por defecto
+                    storage.reference.child("users/$uid/pf.jpg")
+                        .putBytes(bytes)
+                        .addOnFailureListener { error ->
+                            _uiState.value = _uiState.value.copy(
+                                isLoading = false,
+                                showErrorMessage = true,
+                                errorMessage = error.localizedMessage
+                            )
+                            onResult(error)
+                        }
+                        .addOnSuccessListener {
+                            guardarUsuario()
+                        }
+                }
+                .addOnFailureListener { error ->
+                    // No se pudo obtener la foto por defecto: crear usuario sin subir foto
+                    Log.d("UserViewModel", "No se pudo obtener foto default: ${error.localizedMessage}")
+                    guardarUsuario()
+                }
         }
     }
 
@@ -247,10 +276,35 @@ class UserViewModel : ViewModel(), UserService {
             val usuarioActualizado = (usuarioActual ?: Usuario()).copy(ubicacion = ubicacion)
             it.copy(usuario = usuarioActualizado)
         }
-        val posicion = mapOf(
+        val ubicacion = mapOf(
             "latitud" to latitud,
             "longitud" to longitud
         )
-        database.reference.child("users").child(uid).child("posicion").setValue(posicion)
+        database.reference.child("users").child(uid).child("ubicacion").setValue(ubicacion)
+    }
+
+    override fun updateRecorrido(latitud: Double, longitud: Double) {
+        val uid = auth.currentUser?.uid ?: return
+        _uiState.update {
+            val usuarioActual = it.usuario
+            val ubicacion = Ubicacion(latitud, longitud)
+            val recorridoActual = usuarioActual?.recorrido ?: emptyMap()
+            val tempKey = System.currentTimeMillis().toString()
+            val recorridoActualizado = recorridoActual + (tempKey to ubicacion)
+            val usuarioActualizado = (usuarioActual ?: Usuario()).copy(recorrido = recorridoActualizado)
+            it.copy(usuario = usuarioActualizado)
+        }
+        updatePosicion(latitud, longitud)
+        database.reference.child("users").child(uid).child("recorrido").push().setValue(Ubicacion(latitud, longitud))
+    }
+
+    override fun clearRecorrido() {
+        val uid = auth.currentUser?.uid ?: return
+        _uiState.update {
+            val usuarioActual = it.usuario
+            val usuarioActualizado = (usuarioActual ?: Usuario()).copy(recorrido = emptyMap())
+            it.copy(usuario = usuarioActualizado)
+        }
+        database.reference.child("users").child(uid).child("recorrido").removeValue()
     }
 }

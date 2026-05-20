@@ -1,6 +1,8 @@
 package com.example.tercertaller.ui.components.main
 
 import android.Manifest
+import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -37,25 +39,31 @@ import com.example.tercertaller.R
 import com.example.tercertaller.viewmodels.LocationViewModel
 import com.example.tercertaller.viewmodels.MapaViewModel
 import com.example.tercertaller.viewmodels.UserViewModel
+import com.example.tercertaller.viewmodels.UsersViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MarkerComposable
+import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberUpdatedMarkerState
 
+@SuppressLint("SuspiciousIndentation")
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun ContenidoMapa(
     modifier: Modifier = Modifier,
     mapaViewModel: MapaViewModel = viewModel(),
     locationViewModel: LocationViewModel = viewModel(),
-    userViewModel: UserViewModel = viewModel()
+    userViewModel: UserViewModel = viewModel(),
+    usersViewModel: UsersViewModel = viewModel()
 ) {
     val context = LocalContext.current
 
     val mapUiState by mapaViewModel.uiState.collectAsState()
     val locationUiState by locationViewModel.uiState.collectAsState()
     val userUiState by userViewModel.uiState.collectAsState()
+    val usersUiState by usersViewModel.uiState.collectAsState()
 
     val painter = rememberAsyncImagePainter(
         model = ImageRequest.Builder(LocalContext.current)
@@ -67,12 +75,6 @@ fun ContenidoMapa(
     val state by painter.state.collectAsState()
 
     val imageLoaded = state is AsyncImagePainter.State.Success
-
-    /*LaunchedEffect(imageLoaded) {
-        if (userUiState.usuario != null && imageLoaded) {
-            mapaViewModel.setShowMarker(true)
-        }
-    }*/
 
     val multiplePermission = rememberMultiplePermissionsState(listOf(
         Manifest.permission.ACCESS_FINE_LOCATION,
@@ -107,10 +109,24 @@ fun ContenidoMapa(
     LaunchedEffect(locationUiState.route){
         if(userUiState.usuario?.enLinea ?: false) {
             locationUiState.route.lastOrNull()?.let { pos ->
-                userViewModel.updatePosicion(pos.latitude, pos.longitude)
+                userViewModel.updateRecorrido(pos.latitude, pos.longitude)
             }
-
         }
+    }
+
+    LaunchedEffect(userUiState.usuario?.enLinea) {
+        if (userUiState.usuario?.enLinea == false) {
+            userViewModel.clearRecorrido()
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        usersViewModel.fetchUsuarios()
+    }
+
+    LaunchedEffect(usersUiState.usuarios){
+        Log.d("ContenidoMapa", "Usuarios actualizados: ${usersUiState.usuarios.size}")
+        Log.d("ContenidoMapa", "Usuarios en línea: ${usersUiState.usuarios.values.map { it.nombre }}")
     }
 
     Box(
@@ -178,6 +194,15 @@ fun ContenidoMapa(
 
                     }
                 }
+
+                val recorrido = userUiState.usuario?.recorrido
+                val listaLatLng = recorrido?.values?.map { LatLng(it.latitud, it.longitud) } ?: emptyList()
+                Polyline(
+                    points = listaLatLng,
+                    color = MaterialTheme.colorScheme.primary,
+                    width = 6f,
+                    zIndex = 0f
+                )
             }
 
 
