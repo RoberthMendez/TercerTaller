@@ -16,10 +16,6 @@ class MainViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(MainUiState())
     val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
 
-    fun onUbicacionCompartidaChanged(enabled: Boolean) {
-        _uiState.update { it.copy(isLocationSharingEnabled = enabled) }
-    }
-
     fun onMenuExpandedChanged(expanded: Boolean) {
         _uiState.update { it.copy(isMenuExpanded = expanded) }
     }

@@ -112,7 +112,6 @@ class UserViewModel : ViewModel(), UserService {
                 }
                 .addOnFailureListener { error ->
                     // No se pudo obtener la foto por defecto: crear usuario sin subir foto
-                    Log.d("UserViewModel", "No se pudo obtener foto default: ${error.localizedMessage}")
                     guardarUsuario()
                 }
         }
@@ -146,7 +145,6 @@ class UserViewModel : ViewModel(), UserService {
             .addOnSuccessListener { snapshot ->
                 val usuarioBD = snapshot.getValue(Usuario::class.java)
                 if (usuarioBD != null) {
-                    Log.d("UserViewModel", "Usuario cargado: $usuarioBD")
                     _uiState.value = _uiState.value.copy(isLoading = false, usuario = usuarioBD, loadSuccess = false)
                     cargarFoto()
                 } else {
@@ -168,10 +166,8 @@ class UserViewModel : ViewModel(), UserService {
             return
         }
 
-        Log.d("UserViewModel", "cargarFoto() iniciando para uid: $uid")
         storage.reference.child("users/$uid/pf.jpg").downloadUrl
             .addOnFailureListener { error ->
-                Log.d("UserViewModel", "Error al cargar foto: ${error.localizedMessage}")
                 // Si no hay foto, igualmente marca como loadSuccess = true para permitir navegar
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
@@ -180,13 +176,11 @@ class UserViewModel : ViewModel(), UserService {
                 )
             }
             .addOnSuccessListener { uri ->
-                Log.d("UserViewModel", "Foto cargada exitosamente: $uri")
                 // Establecer la URI primero
                 _uiState.value = _uiState.value.copy(isLoading = false, photoUri = uri)
 
                 // Luego marcar como completado
                 _uiState.value = _uiState.value.copy(loadSuccess = true)
-                Log.d("UserViewModel", "loadSuccess establecido a true con photoUri: $uri")
             }
     }
 

@@ -66,10 +66,6 @@ class RegisterViewModel : ViewModel(){
         _uiState.update { it.copy(photoUri = uri) }
     }
 
-    fun clearPhotoUri() {
-        _uiState.update { it.copy(photoUri = null) }
-    }
-
     fun getUsuario(): Usuario {
         val state = uiState.value
         val nuevoUsuario = Usuario(

@@ -39,6 +39,7 @@ import coil3.compose.rememberAsyncImagePainter
 import coil3.request.ImageRequest
 import coil3.request.allowHardware
 import com.example.tercertaller.R
+import com.example.tercertaller.data.Ubicacion
 import com.example.tercertaller.viewmodels.LocationViewModel
 import com.example.tercertaller.viewmodels.MapaViewModel
 import com.example.tercertaller.viewmodels.UserViewModel
@@ -99,6 +100,17 @@ fun ContenidoMapa(
         }
     }
 
+    fun recorridoOrdenado(recorrido: Map<String, Ubicacion>): List<LatLng> {
+        return recorrido.entries
+            .sortedWith(
+                compareBy<Map.Entry<String, Ubicacion>> { it.key.toLongOrNull() ?: Long.MAX_VALUE }
+                    .thenBy { it.key }
+            )
+            .map { (_, ubicacion) ->
+                LatLng(ubicacion.latitud, ubicacion.longitud)
+            }
+    }
+
     LaunchedEffect(multiplePermission.allPermissionsGranted) {
         if (multiplePermission.allPermissionsGranted) {
             locationViewModel.setup(context)
@@ -144,8 +156,6 @@ fun ContenidoMapa(
             mapaViewModel.setImagesLoaded(false)
             lastUserPhotoUri = lastPhotoUri
         }
-
-        // Actualizar lastUserPhotoUri con la Uri del último usuario en línea
 
     }
 
@@ -209,7 +219,7 @@ fun ContenidoMapa(
                 }
 
                 val recorrido = userUiState.usuario?.recorrido
-                val listaLatLng = recorrido?.values?.map { LatLng(it.latitud, it.longitud) } ?: emptyList()
+                val listaLatLng = recorrido?.let { recorridoOrdenado(it) } ?: emptyList()
                 Polyline(
                     points = listaLatLng,
                     color = MaterialTheme.colorScheme.primary,
@@ -219,7 +229,7 @@ fun ContenidoMapa(
 
                 usersUiState.usuarios.forEach { (_, usuarioMapa) ->
                     val recorridoP = usuarioMapa.usuario.recorrido
-                    val listaLatLng = recorridoP.values.map { LatLng(it.latitud, it.longitud) }
+                    val listaLatLng = recorridoOrdenado(recorridoP)
                     Polyline(
                         points = listaLatLng,
                         color = MaterialTheme.colorScheme.primary,

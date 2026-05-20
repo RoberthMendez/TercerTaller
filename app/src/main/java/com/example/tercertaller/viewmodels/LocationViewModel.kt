@@ -33,7 +33,7 @@ class LocationViewModel : ViewModel(){
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(context.applicationContext)
         locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000).apply {
-            setMinUpdateIntervalMillis(1000)
+            setMinUpdateIntervalMillis(200)
             setGranularity(Granularity.GRANULARITY_PERMISSION_LEVEL)
             setWaitForAccurateLocation(true)
         }.build()

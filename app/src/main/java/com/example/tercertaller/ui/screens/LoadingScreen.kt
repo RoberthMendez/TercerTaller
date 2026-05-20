@@ -1,6 +1,5 @@
 package com.example.tercertaller.ui.screens
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,22 +14,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil3.compose.AsyncImagePainter
-import coil3.compose.rememberAsyncImagePainter
-import coil3.request.ImageRequest
-import coil3.request.allowHardware
 import com.example.tercertaller.R
 import com.example.tercertaller.viewmodels.AuthViewModel
 import com.example.tercertaller.viewmodels.UserViewModel
@@ -71,16 +61,7 @@ fun LoadingScreen(
                     color = MaterialTheme.colorScheme.primary,
                     strokeWidth = 6.dp
                 )
-            } else {
-                /*Image(
-                    painter = painter,
-                    contentDescription = stringResource(R.string.foto_perfil),
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )*/
             }
-            // CircularProgressIndicator grande y fluido
-
 
             // Espaciador
             Spacer(modifier = Modifier.height(28.dp))

@@ -1,7 +1,6 @@
 package com.example.tercertaller.viewmodels
 
 import android.net.Uri
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.tercertaller.data.Usuario
@@ -74,10 +73,8 @@ class UsersViewModel: ViewModel(), UsersService {
                                 usuario = usuario,
                                 photoUri = photoUri
                             )
-                            Log.d("UsersViewModel", "Foto cargada para $usuarioUid: $photoUri")
-                        } catch (e: Exception) {
+                        } catch (_: Exception) {
                             // Si no hay foto, guardar sin photoUri
-                            Log.d("UsersViewModel", "No se pudo cargar foto para $usuarioUid: ${e.localizedMessage}")
                             usuariosMapaConFotos[usuarioUid] = UsuarioMapa(
                                 usuario = usuario,
                                 photoUri = null
